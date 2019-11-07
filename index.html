@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Intern Database</title>    
+
+    <!-- bootstrap Lib -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- datatable lib -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+
+</head>
+<body>
+    <h1>Intern Database</h1>
+    <div class="container">
+            <!--button to add new person-->
+            <button type="button" id="getEdit" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#myModal" data-id="'0'"><i class="glyphicon glyphicon-pencil">&nbsp;</i>Add New</button>
+            <!--drop down to filter table-->
+            <select id="dropActive" class="dropActive" name="dropActive" onchange="ReloadTable()">
+				<option value=3>All</option>
+				<option value=1 selected='selected'>Active</option>
+				<option value=0>Inactive</option>
+			</select>
+    </div>
+    <div class="container">
+        
+        <table id="example" class="display" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+				<th>ID</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Department</th>
+				<th>Role</th>
+				<th>Personal Email</th>
+				<th>Purdue Global Email</th>
+				<th>PGIP-Tech Email</th>
+				<th>Track</th>
+				<th>Start Date</th>
+				<th>End Date</th>
+                <th>Action
+                    
+                </th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>ID</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Department</th>
+				<th>Role</th>
+				<th>Personal Email</th>
+				<th>Purdue Global Email</th>
+				<th>PGIP-Tech Email</th>
+				<th>Track</th>
+				<th>Start Date</th>
+				<th>End Date</th>
+                <th>Action</th>
+            </tr>
+            </tfoot>
+        </table>
+
+        <!--create modal dialog for display detail info for edit on button cell click-->
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog">
+                <div id="content-data"></div>
+            </div>
+        </div>
+    </div>   
+    <script>
+            function GetTable()
+            {       
+
+                //Called to rebuild and refresh the data.             
+                    $('#example').DataTable().destroy();
+                    $('#example').DataTable({
+                        "processing": true,
+                        "serverSide":true,
+                        "ajax":{
+                            url:"GetPersonnel.php",
+                            type:"post",
+                            data: {"active": document.getElementById("dropActive").value}
+                        }
+                    });
+    
+                    $('#example').DataTable().ajax.reload(null, false);
+            }
+        </script>
+
+
+    
+    <script>
+        //Open Modal for edit personnel
+
+        $(document).on('click','#getEdit',function(e){
+            e.preventDefault();
+            var per_id=$(this).data('id');
+            //alert(per_id);
+            $('#content-data').html('');
+            $.ajax({
+                url:'EditData.php',
+                type:'POST',
+                data:'id='+per_id,
+                dataType:'html'
+            }).done(function(data){
+                $('#content-data').html('');
+                $('#content-data').html(data);
+            }).fail(function(){
+                $('#content-data').html('<p>Error</p>');
+            });
+            
+        });
+    </script>   
+
+
+<script>
+//Stores and reloads the drop down for the table status. If null then 1 = Active
+window.onload = function() {
+    var selItem = sessionStorage.getItem("SelItem");
+
+    if(selItem == null){
+        selItem = 1;
+    }
+
+    $('#dropActive').val(selItem);
+    GetTable();
+    }
+
+    $('#dropActive').change(function() { 
+        var selVal = $(this).val();
+        sessionStorage.setItem("SelItem", selVal);
+        GetTable();
+    });
+    
+
+
+</script>
+
+
+<script>
+    //Changes the Person from Active to Inactive based on their current status
+function ChangeStatus(PersonnelID, Active)
+            {
+                $.ajax({
+    url: 'Functions.php',
+    type: 'post',
+    data: {"StatusChange": true,
+           "PersonnelID":PersonnelID,
+           "Active":Active
+    },
+    success: function(response) 
+    { 
+        GetTable();
+    }
+    });
+            }
+        </script>
+
+
+
+
+   
+</body>
+</html>
